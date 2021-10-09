@@ -49,8 +49,24 @@ async function set_charging(kw) {
     console.log("RESPONSE: ", data);
 }
 
+async function set_charging_allowed() {
+    const response = await fetch(
+        'http://10.0.0.8:5000/charging-allowed/set',
+        {
+            method: 'POST', 
+            body: JSON.stringify({
+                "value": 1
+            }),
+            headers: {'Content-Type': 'application/json'}
+        }
+    );
+    const data = await response.json();
+    console.log("SET CHARGING ALLOWED: ", data);
+}
+
 setInterval(async function() {;
     var kw = await get_kw(await request_data());
 
-    set_charging(kw);
+    await set_charging(kw);
+    await set_charging_allowed();
 }, 15 * 60 * 1000);
