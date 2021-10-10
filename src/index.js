@@ -5,9 +5,9 @@ import fetch from 'node-fetch';
 async function request_data() {
     // StartTime and EndTime are spaced apart 15min
     var startTime = new Date();
-    startTime = startTime.getFullYear() + '-' + startTime.getMonth() + '-' + startTime.getDay() + '%20' + startTime.getHours() + ':'  + startTime.getMinutes() + ':' + startTime.getSeconds();
+    startTime = startTime.getFullYear() + '-' + startTime.getMonth() + '-' + startTime.getDate() + '%20' + startTime.getHours() + ':'  + startTime.getMinutes() + ':' + startTime.getSeconds();
     var endTime = new Date(new Date().getTime() + (60 * 1000));
-    endTime = endTime.getFullYear() + '-' + endTime.getMonth() + '-' + endTime.getDay() + '%20' + endTime.getHours() + ':'  + endTime.getMinutes() + ':' + endTime.getSeconds();
+    endTime = endTime.getFullYear() + '-' + endTime.getMonth() + '-' + endTime.getDate() + '%20' + endTime.getHours() + ':'  + endTime.getMinutes() + ':' + endTime.getSeconds();
 
     // Get data from api
     const response = await fetch(
@@ -22,6 +22,7 @@ async function request_data() {
 
         , {method: 'GET'}
     );
+    console.log(response);
     const data = await response.json();
 
     var production = data.powerDetails.meters[0].values[0].value;
