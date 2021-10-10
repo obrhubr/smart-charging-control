@@ -18,7 +18,7 @@ async function request_data() {
     const response = await fetch(
         'https://monitoringapi.solaredge.com/site/' +
         process.env.SITEID +
-        '/powerDetails?meters=PRODUCTION&startTime=' +
+        '/powerDetails?meters=FEEDIN,PURCHASED&startTime=' +
         startTime + 
         '&endTime=' +
         endTime +
@@ -27,17 +27,43 @@ async function request_data() {
 
         , {method: 'GET'}
     );
-    console.log(response);
     const data = await response.json();
 
-    var production = data.powerDetails.meters[0].values[0].value;
-    console.log("PRODUCTION: ", production);
+    var purchased = 0;
+    var feedin = 0;
 
-    return production;
+    for(var i = 0; i < 2; i++) {
+        if(data.powerDetails.meters[i].type == "Purchased") {
+            purchased = data.powerDetails.meters[i].values[0].value;
+            console.log("PURCHASED: ", purchased);
+        }
+        if(data.powerDetails.meters[i].type == "FeedIn") {
+            feedin = data.powerDetails.meters[i].values[0].value;
+            console.log("FEEDIN: ", feedin);
+        }
+    }
+
+    return [feedin, purchased];
 }
 
-function get_kw(production) {
-    return Math.floor((production - 2000) / 1000);
+async function get_charging() {
+    const response = await fetch(
+        'http://10.0.0.8:5000/charging-speed/read',
+        {
+            method: 'GET'
+        }
+    );
+    const data = await response.json();
+    console.log("CURRENT CHARGING: ", data);
+    return data.results.charging_speed_kw
+}
+
+function get_kw(last_charging_kw, feedin, purchased) {
+    var charging_kw = Math.min(Math.max((last_charging_kw + feedin / 1000 - purchased / 1000), 3.5), 8);
+
+    console.log("SETTING TO: ", charging_kw);
+
+    return Math.round(charging_kw);
 }
 
 async function set_charging(kw) {
@@ -52,7 +78,7 @@ async function set_charging(kw) {
         }
     );
     const data = await response.json();
-    console.log("RESPONSE: ", data);
+    console.log("CHARGING SET: ", data);
 }
 
 async function set_charging_allowed() {
@@ -70,7 +96,6 @@ async function set_charging_allowed() {
     console.log("SET CHARGING ALLOWED: ", data);
 }
 
-// respond with "hello world" when a GET request is made to the homepage
 app.post('/manual', function (req, res) {
     var flag = req.body.value;
 
@@ -89,7 +114,11 @@ app.listen(process.env.PORT, () => {
 
     setInterval(async function() {;
         if(app.locals.manual == 0) {
-            var kw = await get_kw(await request_data());
+            console.log("GETTING DATA: ");
+            var power = await request_data();
+            var current_kw = await get_charging();
+
+            var kw = get_kw(current_kw, power[0], power[1]);
 
             await set_charging(kw);
             await set_charging_allowed();
