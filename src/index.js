@@ -5,7 +5,7 @@ import express from 'express';
 import bodyParser from 'body-parser';
 
 const app = express();
-app.use(bodyParser.urlencoded({ limit: '15mb', extended: false }));
+app.use(bodyParser.json());
 
 async function request_data() {
     // StartTime and EndTime are spaced apart 15min
@@ -97,13 +97,16 @@ async function set_charging_allowed() {
 }
 
 app.post('/manual', function (req, res) {
+    console.log(req.body);
     var flag = req.body.value;
 
     if(flag == 0) {
         req.app.locals.manual = 0;
+        console.log("Successfully changed to automatic.");
         res.json({"result": "Successfully changed to automatic."});
     } else {
         req.app.locals.manual = 1;
+        console.log("Successfully changed to manual.");
         res.json({"result": "Successfully changed to manual."});
     }
 });
