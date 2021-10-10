@@ -14,17 +14,20 @@ async function request_data() {
     var endTime = new Date(new Date().getTime() + (60 * 1000));
     endTime = endTime.getFullYear() + '-' + endTime.getMonth() + '-' + endTime.getDate() + '%20' + endTime.getHours() + ':'  + endTime.getMinutes() + ':' + endTime.getSeconds();
 
-    // Get data from api
-    const response = await fetch(
-        'https://monitoringapi.solaredge.com/site/' +
+    var url = 'https://monitoringapi.solaredge.com/site/' +
         process.env.SITEID +
         '/powerDetails?meters=FEEDIN,PURCHASED&startTime=' +
         startTime + 
         '&endTime=' +
         endTime +
         '&api_key=' + 
-        process.env.TOKEN
+        process.env.TOKEN;
 
+    console.log(url);
+
+    // Get data from api
+    const response = await fetch(
+        url
         , {method: 'GET'}
     );
     const data = await response.json();
