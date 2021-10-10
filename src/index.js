@@ -1,6 +1,11 @@
 import * as dotenv from 'dotenv'; 
 dotenv.config();
 import fetch from 'node-fetch';
+import express from 'express';
+import bodyParser from 'body-parser';
+
+const app = express();
+app.use(bodyParser.urlencoded({ limit: '15mb', extended: false }));
 
 async function request_data() {
     // StartTime and EndTime are spaced apart 15min
@@ -65,9 +70,29 @@ async function set_charging_allowed() {
     console.log("SET CHARGING ALLOWED: ", data);
 }
 
-setInterval(async function() {;
-    var kw = await get_kw(await request_data());
+// respond with "hello world" when a GET request is made to the homepage
+app.post('/manual', function (req, res) {
+    var flag = req.body.value;
 
-    await set_charging(kw);
-    await set_charging_allowed();
-}, 15 * 60 * 1000);
+    if(flag == 0) {
+        req.app.locals.manual = 0;
+        res.json({"result": "Successfully changed to automatic."});
+    } else {
+        req.app.locals.manual = 1;
+        res.json({"result": "Successfully changed to manual."});
+    }
+});
+
+app.listen(process.env.PORT, () => { 
+    console.log("Server listening on port: " + process.env.PORT);
+    app.locals.manual = 0;
+
+    setInterval(async function() {;
+        if(app.locals.manual == 0) {
+            var kw = await get_kw(await request_data());
+
+            await set_charging(kw);
+            await set_charging_allowed();
+        }
+    }, 15 * 60 * 1000);
+});
