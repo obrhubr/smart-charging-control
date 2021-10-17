@@ -7,6 +7,17 @@ import bodyParser from 'body-parser';
 const app = express();
 app.use(bodyParser.json());
 
+async function get_timezone_date() {
+    // Get data from api
+    const response = await fetch(
+        "http://worldtimeapi.org/api/timezone/Europe/Vienna"
+        , {method: 'GET'}
+    );
+    const data = await response.json();
+
+    return data.datetime;
+}
+
 async function request_data() {
     // StartTime and EndTime are spaced apart 15min
     var startTime = new Date();
@@ -49,16 +60,17 @@ async function request_data() {
     return [feedin, purchased];
 }
 
-async function get_charging() {
-    const response = await fetch(
-        'http://10.0.0.8:5000/charging-speed/read',
-        {
-            method: 'GET'
-        }
-    );
-    const data = await response.json();
-    console.log("CURRENT CHARGING: ", data);
-    return data.results.charging_speed_kw
+function get_kw(last_charging_kw_not_corrected, feedin, purchased) {
+    var last_charging_kw = last_charging_kw_not_corrected < 4.3 ? 2 : last_charging_kw_not_corrected;-
+
+    console.log("GET KW FORMULA: (last_charging_kw, feedin, purchased) ", last_charging_kw, feedin, purchased);
+
+    var charging_kw = Math.min(Math.max((last_charging_kw + feedin / 1000 - purchased / 1000), 4.2), 8);
+    var rounded = Math.round(charging_kw);
+
+    console.log("SETTING TO: (rounded, not rounded) ", rounded, charging_kw);
+
+    return rounded;
 }
 
 function get_kw(last_charging_kw, feedin, purchased) {
