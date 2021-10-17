@@ -19,11 +19,13 @@ async function get_timezone_date() {
 }
 
 async function request_data() {
+    var real_time = get_timezone_date();
+
     // StartTime and EndTime are spaced apart 15min
-    var startTime = new Date();
-    startTime = startTime.getFullYear() + '-' + startTime.getMonth() + '-' + startTime.getDate() + '%20' + startTime.getHours() + ':'  + startTime.getMinutes() + ':' + startTime.getSeconds();
-    var endTime = new Date(new Date().getTime() + (60 * 1000));
-    endTime = endTime.getFullYear() + '-' + endTime.getMonth() + '-' + endTime.getDate() + '%20' + endTime.getHours() + ':'  + endTime.getMinutes() + ':' + endTime.getSeconds();
+    var startTime = new Date(real_time);
+    startTime = startTime.getFullYear() + '-' + (startTime.getMonth() + 1) + '-' + startTime.getDate() + '%20' + startTime.getHours() + ':'  + startTime.getMinutes() + ':' + startTime.getSeconds();
+    var endTime = new Date(new Date().getTime(real_time) + (60 * 1000));
+    endTime = endTime.getFullYear() + '-' + (startTime.getMonth() + 1) + '-' + endTime.getDate() + '%20' + endTime.getHours() + ':'  + endTime.getMinutes() + ':' + endTime.getSeconds();
 
     var url = 'https://monitoringapi.solaredge.com/site/' +
         process.env.SITEID +
@@ -58,6 +60,18 @@ async function request_data() {
     }
 
     return [feedin, purchased];
+}
+
+async function get_charging() {
+    const response = await fetch(
+        'http://10.0.0.8:5000/charging-speed/read',
+        {
+            method: 'GET'
+        }
+    );
+    const data = await response.json();
+    console.log("CURRENT CHARGING: ", data);
+    return data.results.charging_speed_kw
 }
 
 function get_kw(last_charging_kw_not_corrected, feedin, purchased) {
