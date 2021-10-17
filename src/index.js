@@ -73,14 +73,6 @@ function get_kw(last_charging_kw_not_corrected, feedin, purchased) {
     return rounded;
 }
 
-function get_kw(last_charging_kw, feedin, purchased) {
-    var charging_kw = Math.min(Math.max((last_charging_kw + feedin / 1000 - purchased / 1000), 3.5), 8);
-
-    console.log("SETTING TO: ", charging_kw);
-
-    return Math.round(charging_kw);
-}
-
 async function set_charging(kw) {
     const response = await fetch(
         'http://10.0.0.8:5000/charging-speed/set',
