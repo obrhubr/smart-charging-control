@@ -19,13 +19,13 @@ async function get_timezone_date() {
 }
 
 async function request_data() {
-    var real_time = get_timezone_date();
+    var real_time = await get_timezone_date();
 
     // StartTime and EndTime are spaced apart 15min
     var startTime = new Date(real_time);
     startTime = startTime.getFullYear() + '-' + (startTime.getMonth() + 1) + '-' + startTime.getDate() + '%20' + startTime.getHours() + ':'  + startTime.getMinutes() + ':' + startTime.getSeconds();
     var endTime = new Date(new Date().getTime(real_time) + (60 * 1000));
-    endTime = endTime.getFullYear() + '-' + (startTime.getMonth() + 1) + '-' + endTime.getDate() + '%20' + endTime.getHours() + ':'  + endTime.getMinutes() + ':' + endTime.getSeconds();
+    endTime = endTime.getFullYear() + '-' + (endTime.getMonth() + 1) + '-' + endTime.getDate() + '%20' + endTime.getHours() + ':'  + endTime.getMinutes() + ':' + endTime.getSeconds();
 
     var url = 'https://monitoringapi.solaredge.com/site/' +
         process.env.SITEID +
