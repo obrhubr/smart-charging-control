@@ -43,23 +43,29 @@ async function request_data() {
         url
         , {method: 'GET'}
     );
-    const data = await response.json();
 
-    var purchased = 0;
-    var feedin = 0;
+    try {
+        const data = await response.json();
 
-    for(var i = 0; i < 2; i++) {
-        if(data.powerDetails.meters[i].type == "Purchased") {
-            purchased = data.powerDetails.meters[i].values[0].value;
-            console.log("PURCHASED: ", purchased);
+        var purchased = 0;
+        var feedin = 0;
+
+        for(var i = 0; i < 2; i++) {
+            if(data.powerDetails.meters[i].type == "Purchased") {
+                purchased = data.powerDetails.meters[i].values[0].value;
+                console.log("PURCHASED: ", purchased);
+            }
+            if(data.powerDetails.meters[i].type == "FeedIn") {
+                feedin = data.powerDetails.meters[i].values[0].value;
+                console.log("FEEDIN: ", feedin);
+            }
         }
-        if(data.powerDetails.meters[i].type == "FeedIn") {
-            feedin = data.powerDetails.meters[i].values[0].value;
-            console.log("FEEDIN: ", feedin);
-        }
+
+        return [feedin, purchased];
+    } catch (err) {
+        console.log("ERROR API: ", res.text());
+        throw err;
     }
-
-    return [feedin, purchased];
 }
 
 async function get_charging() {
@@ -138,14 +144,18 @@ app.listen(process.env.PORT, () => {
 
     setInterval(async function() {;
         if(app.locals.manual == 0) {
-            console.log("GETTING DATA: ");
-            var power = await request_data();
-            var current_kw = await get_charging();
-
-            var kw = get_kw(current_kw, power[0], power[1]);
-
-            await set_charging(kw);
-            await set_charging_allowed();
+            try {
+                console.log("GETTING DATA: ");
+                var power = await request_data();
+                var current_kw = await get_charging();
+    
+                var kw = get_kw(current_kw, power[0], power[1]);
+    
+                await set_charging(kw);
+                await set_charging_allowed();
+            } catch (err) {
+                console.log("ERR: ", err);
+            }
         }
     }, 15 * 60 * 1000);
 });
