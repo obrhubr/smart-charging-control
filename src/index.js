@@ -1,11 +1,23 @@
 import * as dotenv from 'dotenv'; 
 dotenv.config();
+import fs from 'fs';
 import fetch from 'node-fetch';
 import express from 'express';
 import bodyParser from 'body-parser';
 
 const app = express();
 app.use(bodyParser.json());
+
+function write_offset(offset) {
+    let data = JSON.stringify({ offset: offset });
+    fs.writeFileSync('offset.json', data);
+}
+
+function read_offset() {
+    let rawdata = fs.readFileSync('../offset.json');
+    let offset = JSON.parse(rawdata);
+    return offset.offset;
+}
 
 async function get_timezone_date() {
     // Get data from api
@@ -124,7 +136,6 @@ async function set_charging_allowed() {
 }
 
 app.post('/manual', function (req, res) {
-    console.log(req.body);
     var flag = req.body.value;
 
     if(flag == 0) {
@@ -138,6 +149,12 @@ app.post('/manual', function (req, res) {
     }
 });
 
+app.post('/offset', (req, res) =>  {
+    write_offset(req.body.value);
+
+    res.json({ "result": "Successfully changed offset to: " + req.body.value });
+})
+
 app.listen(process.env.PORT, () => { 
     console.log("Server listening on port: " + process.env.PORT);
     app.locals.manual = 0;
@@ -150,8 +167,9 @@ app.listen(process.env.PORT, () => {
                 var current_kw = await get_charging();
     
                 var kw = get_kw(current_kw, power[0], power[1]);
-    
-                await set_charging(kw);
+                var offset = read_offset();
+
+                await set_charging(kw + offset);
                 await set_charging_allowed();
             } catch (err) {
                 console.log("ERR: ", err);
