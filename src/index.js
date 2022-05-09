@@ -214,5 +214,5 @@ app.listen(process.env.PORT, () => {
                 console.log("ERR: ", err);
             }
         }
-    }, 15 * 1000);
+    }, 15 * 1000 * 60);
 });
