@@ -5,6 +5,13 @@ import fetch from 'node-fetch';
 import express from 'express';
 import bodyParser from 'body-parser';
 
+let metrics_data = {
+    solar_power: 0,
+    read_kw: 0,
+    set_kw: 0,
+    offset: 0
+}
+
 const app = express();
 app.use(bodyParser.json());
 
@@ -155,6 +162,28 @@ app.post('/offset', (req, res) =>  {
     res.json({ "result": "Successfully changed offset to: " + req.body.value });
 })
 
+app.get('/prometheus', (req, res) => {
+    res.setHeader('content-type', 'text/plain');
+    ```
+    # TYPE smc_health gauge
+    smc_healt 1
+
+    # TYPE smc_solar_power gauge
+    smc_solar_power 9.123
+
+    # TYPE smc_read_kw gauge
+    smc_read_kw 9.123
+
+    # TYPE smc_set_kw gauge
+    smc_set_kw 9.123
+
+    # TYPE smc_offset gauge
+    smc_offset 9.123
+    ```
+
+    res.send(`# TYPE smc_health gauge\nsmc_health 1\n# TYPE smc_solar_power gauge\nsmc_solar_power ${metrics_data.solar_power}\n# TYPE smc_read_kw gauge\nsmc_read_kw ${metrics_data.read_kw}\n# TYPE smc_set_kw gauge\nsmc_set_kw ${metrics_data.set_kw}\n# TYPE smc_offset gauge\nsmc_offset ${metrics_data.offset}`)
+});
+
 app.listen(process.env.PORT, () => { 
     console.log("Server listening on port: " + process.env.PORT);
     app.locals.manual = 0;
@@ -164,12 +193,16 @@ app.listen(process.env.PORT, () => {
             try {
                 console.log("GETTING DATA: ");
                 var power = await request_data();
+                metrics_data.read_kw(power);
                 var current_kw = await get_charging();
     
                 var kw = get_kw(current_kw, power[0], power[1]);
+                metrics_data.read_kw(kw);
                 var offset = read_offset();
+                metrics_data.offset = offset;
 
                 await set_charging(kw + offset);
+                metrics_data.set_kw(kw + offset);
                 await set_charging_allowed();
             } catch (err) {
                 console.log("ERR: ", err);
