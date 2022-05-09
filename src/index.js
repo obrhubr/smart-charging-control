@@ -6,7 +6,8 @@ import express from 'express';
 import bodyParser from 'body-parser';
 
 let metrics_data = {
-    solar_power: 0,
+    solar_power_feedin: 0,
+    solar_power_purchased: 0,
     read_kw: 0,
     set_kw: 0,
     offset: 0
@@ -169,8 +170,11 @@ app.get('/prometheus', (req, res) => {
     # TYPE smc_health gauge
     smc_healt 1
 
-    # TYPE smc_solar_power gauge
-    smc_solar_power 9.123
+    # TYPE smc_solar_power_feedin gauge
+    smc_solar_power_feedin 9.123
+
+    # TYPE smc_solar_power_purchased gauge
+    smc_solar_power_purchased 9.123
 
     # TYPE smc_read_kw gauge
     smc_read_kw 9.123
@@ -182,7 +186,7 @@ app.get('/prometheus', (req, res) => {
     smc_offset 9.123
     */
 
-    res.send(`# TYPE smc_health gauge\nsmc_health 1\n# TYPE smc_solar_power gauge\nsmc_solar_power ${metrics_data.solar_power}\n# TYPE smc_read_kw gauge\nsmc_read_kw ${metrics_data.read_kw}\n# TYPE smc_set_kw gauge\nsmc_set_kw ${metrics_data.set_kw}\n# TYPE smc_offset gauge\nsmc_offset ${metrics_data.offset}`)
+    res.send(`# TYPE smc_health gauge\nsmc_health 1\n# TYPE smc_solar_power_feedin gauge\nsmc_solar_power_feedin ${metrics_data.smc_solar_power_feedin}\n# TYPE smc_solar_power_purchased gauge\nsmc_solar_power_purchased ${metrics_data.smc_solar_power_purchased}\n# TYPE smc_read_kw gauge\nsmc_read_kw ${metrics_data.read_kw}\n# TYPE smc_set_kw gauge\nsmc_set_kw ${metrics_data.set_kw}\n# TYPE smc_offset gauge\nsmc_offset ${metrics_data.offset}`)
 });
 
 app.listen(process.env.PORT, () => { 
@@ -194,7 +198,8 @@ app.listen(process.env.PORT, () => {
             try {
                 console.log("GETTING DATA: ");
                 var power = await request_data();
-                metrics_data.solar_power = power;
+                metrics_data.solar_power_feedin = power[0];
+                metrics_data.solar_power_purchased = power[1];
                 var current_kw = await get_charging();
     
                 var kw = get_kw(current_kw, power[0], power[1]);
