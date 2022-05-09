@@ -164,7 +164,7 @@ app.post('/offset', (req, res) =>  {
 
 app.get('/prometheus', (req, res) => {
     res.setHeader('content-type', 'text/plain');
-    ```
+    /*
     # TYPE smc_health gauge
     smc_healt 1
 
@@ -179,7 +179,7 @@ app.get('/prometheus', (req, res) => {
 
     # TYPE smc_offset gauge
     smc_offset 9.123
-    ```
+    */
 
     res.send(`# TYPE smc_health gauge\nsmc_health 1\n# TYPE smc_solar_power gauge\nsmc_solar_power ${metrics_data.solar_power}\n# TYPE smc_read_kw gauge\nsmc_read_kw ${metrics_data.read_kw}\n# TYPE smc_set_kw gauge\nsmc_set_kw ${metrics_data.set_kw}\n# TYPE smc_offset gauge\nsmc_offset ${metrics_data.offset}`)
 });
