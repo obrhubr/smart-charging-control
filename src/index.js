@@ -21,7 +21,7 @@ function write_offset(offset) {
 }
 
 function read_offset() {
-    let rawdata = fs.readFileSync('../offset.json');
+    let rawdata = fs.readFileSync('./offset.json');
     let offset = JSON.parse(rawdata);
     return offset.offset;
 }
@@ -40,15 +40,16 @@ async function get_timezone_date() {
 async function request_data() {
     var real_time = await get_timezone_date();
 
-    // StartTime and EndTime are spaced apart 15min
-    var startTime = new Date(real_time);
+    // StartTime and EndTime are spaced apart 1min
+    var startTime = new Date(new Date(real_time).getTime() - (15 * 60 * 1000));
     startTime = startTime.getFullYear() + '-' + (startTime.getMonth() + 1) + '-' + startTime.getDate() + '%20' + startTime.getHours() + ':'  + startTime.getMinutes() + ':' + startTime.getSeconds();
-    var endTime = new Date(new Date().getTime(real_time) + (60 * 1000));
-    endTime = endTime.getFullYear() + '-' + (endTime.getMonth() + 1) + '-' + endTime.getDate() + '%20' + endTime.getHours() + ':'  + endTime.getMinutes() + ':' + endTime.getSeconds();
+    var endTime = startTime;
+    /* var endTime = new Date(new Date(real_time).getTime + (60 * 1000));
+    endTime = endTime.getFullYear() + '-' + (endTime.getMonth() + 1) + '-' + endTime.getDate() + '%20' + endTime.getHours() + ':'  + endTime.getMinutes() + ':' + endTime.getSeconds(); */
 
     var url = 'https://monitoringapi.solaredge.com/site/' +
         process.env.SITEID +
-        '/powerDetails?meters=FEEDIN,PURCHASED&startTime=' +
+        '/powerDetails.json?meters=FEEDIN,PURCHASED&startTime=' +
         startTime + 
         '&endTime=' +
         endTime +
@@ -82,7 +83,7 @@ async function request_data() {
 
         return [feedin, purchased];
     } catch (err) {
-        console.log("ERROR API: ", res.text());
+        console.log("ERROR API: ", err);
         throw err;
     }
 }
@@ -193,20 +194,20 @@ app.listen(process.env.PORT, () => {
             try {
                 console.log("GETTING DATA: ");
                 var power = await request_data();
-                metrics_data.read_kw(power);
+                metrics_data.solar_power = power;
                 var current_kw = await get_charging();
     
                 var kw = get_kw(current_kw, power[0], power[1]);
-                metrics_data.read_kw(kw);
+                metrics_data.read_kw = kw;
                 var offset = read_offset();
                 metrics_data.offset = offset;
 
                 await set_charging(kw + offset);
-                metrics_data.set_kw(kw + offset);
+                metrics_data.set_kw = kw + offset;
                 await set_charging_allowed();
             } catch (err) {
                 console.log("ERR: ", err);
             }
         }
-    }, 15 * 60 * 1000);
+    }, 15 * 1000);
 });
