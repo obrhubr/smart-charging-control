@@ -186,7 +186,7 @@ app.get('/prometheus', (req, res) => {
     smc_offset 9.123
     */
 
-    res.send(`# TYPE smc_health gauge\nsmc_health 1\n# TYPE smc_solar_power_feedin gauge\nsmc_solar_power_feedin ${metrics_data.smc_solar_power_feedin}\n# TYPE smc_solar_power_purchased gauge\nsmc_solar_power_purchased ${metrics_data.smc_solar_power_purchased}\n# TYPE smc_read_kw gauge\nsmc_read_kw ${metrics_data.read_kw}\n# TYPE smc_set_kw gauge\nsmc_set_kw ${metrics_data.set_kw}\n# TYPE smc_offset gauge\nsmc_offset ${metrics_data.offset}`)
+    res.send(`# TYPE smc_health gauge\nsmc_health 1\n# TYPE smc_solar_power_feedin gauge\nsmc_solar_power_feedin ${metrics_data.solar_power_feedin}\n# TYPE smc_solar_power_purchased gauge\nsmc_solar_power_purchased ${metrics_data.solar_power_purchased}\n# TYPE smc_read_kw gauge\nsmc_read_kw ${metrics_data.read_kw}\n# TYPE smc_set_kw gauge\nsmc_set_kw ${metrics_data.set_kw}\n# TYPE smc_offset gauge\nsmc_offset ${metrics_data.offset}`)
 });
 
 app.listen(process.env.PORT, () => { 
