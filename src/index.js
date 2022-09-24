@@ -101,12 +101,12 @@ async function get_charging() {
     return data.results.charging_speed_kw
 }
 
-function get_kw(last_charging_kw_not_corrected, feedin, purchased) {
+function get_kw(last_charging_kw_not_corrected, feedin, purchased, offset) {
     var last_charging_kw = last_charging_kw_not_corrected < 4.3 ? 2 : last_charging_kw_not_corrected;-
 
     console.log("GET KW FORMULA: (last_charging_kw, feedin, purchased) ", last_charging_kw, feedin, purchased);
 
-    var charging_kw = Math.min(Math.max((last_charging_kw + feedin / 1000 - purchased / 1000), 4.2), 8);
+    var charging_kw = Math.min(Math.max(((last_charging_kw + feedin / 1000 - purchased / 1000) + offset), 4.2), 8);
     var rounded = Math.round(charging_kw);
 
     console.log("SETTING TO: (rounded, not rounded) ", rounded, charging_kw);
@@ -202,13 +202,14 @@ app.listen(process.env.PORT, () => {
                 metrics_data.solar_power_purchased = power[1];
                 var current_kw = await get_charging();
     
-                var kw = get_kw(current_kw, power[0], power[1]);
-                metrics_data.read_kw = kw;
                 var offset = read_offset();
                 metrics_data.offset = offset;
 
-                await set_charging(kw + offset);
-                metrics_data.set_kw = kw + offset;
+                var kw = get_kw(current_kw, power[0], power[1], offset);
+                metrics_data.read_kw = kw;
+
+                await set_charging(kw);
+                metrics_data.set_kw = kw;
                 await set_charging_allowed();
             } catch (err) {
                 console.log("ERR: ", err);
