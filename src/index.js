@@ -4,6 +4,7 @@ import fs from 'fs';
 import fetch from 'node-fetch';
 import express from 'express';
 import bodyParser from 'body-parser';
+import moment from 'moment-timezone';
 
 let metrics_data = {
     solar_power_feedin: 0,
@@ -27,22 +28,17 @@ function read_offset() {
     return offset.offset;
 }
 
-async function get_timezone_date() {
+function get_timezone_date() {
     // Get data from api
-    const response = await fetch(
-        "http://worldtimeapi.org/api/timezone/Europe/Vienna"
-        , {method: 'GET'}
-    );
-    const data = await response.json();
-
-    return data.datetime;
+    const viennaTime = moment().tz("Europe/Vienna");
+    return viennaTime;
 }
 
 async function request_data() {
-    var real_time = await get_timezone_date();
+    var real_time = get_timezone_date();
 
     // StartTime and EndTime are spaced apart 1min
-    var startTime = new Date(new Date(real_time).getTime() - (15 * 60 * 1000));
+    var startTime = new Date(real_time.subtract(15, 'minutes'));
     startTime = startTime.getFullYear() + '-' + (startTime.getMonth() + 1) + '-' + startTime.getDate() + '%20' + startTime.getHours() + ':'  + startTime.getMinutes() + ':' + startTime.getSeconds();
     var endTime = startTime;
     /* var endTime = new Date(new Date(real_time).getTime + (60 * 1000));
