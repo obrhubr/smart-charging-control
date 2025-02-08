@@ -36,6 +36,7 @@ function get_timezone_date() {
 
 async function request_data() {
     var real_time = get_timezone_date();
+    console.log("CURRENT TIME:", real_time);
 
     // StartTime and EndTime are spaced apart 1min
     var startTime = new Date(real_time.subtract(15, 'minutes'));
