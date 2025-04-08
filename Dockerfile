@@ -12,4 +12,4 @@ COPY . .
 ENV TZ=Europe/Vienna
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-CMD [ "node", "src/index.js" ]
+CMD [ "node", "src/server.js" ]
